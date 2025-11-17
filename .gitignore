@@ -1,0 +1,14 @@
+# Rust
+/target
+
+# Foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+
+# Node (only used to rebuild vendored bytecode)
+node_modules/
+
+# Local environment
+.env
+.DS_Store

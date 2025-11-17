@@ -1,0 +1,29 @@
+[profile.default]
+src = "src"
+test = "test"
+script = "script"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.30"
+evm_version = "cancun"
+optimizer = true
+optimizer_runs = 10_000
+# The vector generator runs millions of swaps in one simulated call.
+gas_limit = 9_223_372_036_854_775_807
+remappings = ["forge-std/=lib/forge-std/src/"]
+# Vendored Uniswap bytecode is read by the fixtures; vectors are written for the Rust tests.
+fs_permissions = [
+    { access = "read", path = "./vendor/artifacts" },
+    { access = "read-write", path = "../testdata" },
+]
+
+[fuzz]
+runs = 1000
+
+[invariant]
+runs = 256
+depth = 64
+fail_on_revert = false
+
+[fmt]
+line_length = 120
