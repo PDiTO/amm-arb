@@ -1,0 +1,49 @@
+[workspace]
+resolver = "3"
+members = ["crates/amm-math"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+license = "MIT"
+authors = ["Paul Davis"]
+
+[workspace.dependencies]
+amm-math = { path = "crates/amm-math" }
+amm-arb = { path = "crates/amm-arb" }
+alloy-primitives = { version = "=1.4.1", default-features = false, features = ["std", "serde"] }
+alloy = { version = "=1.1.1", default-features = false, features = ["provider-http", "rpc-types", "sol-types", "contract", "reqwest-rustls-tls"] }
+anyhow = "=1.0.100"
+clap = { version = "=4.5.51", features = ["derive"] }
+criterion = { version = "=0.7.0", default-features = false, features = ["cargo_bench_support"] }
+proptest = "=1.9.0"
+serde = { version = "=1.0.228", features = ["derive"] }
+serde_json = "=1.0.145"
+thiserror = "=2.0.17"
+tokio = { version = "=1.48.0", features = ["rt-multi-thread", "macros"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+cast_possible_truncation = "allow"
+cast_possible_wrap = "allow"
+cast_sign_loss = "allow"
+cast_precision_loss = "allow"
+cast_lossless = "allow"
+similar_names = "allow"
+many_single_char_names = "allow"
+unreadable_literal = "allow"
+
+[profile.release]
+debug = 1
+
+[profile.bench]
+debug = 1
