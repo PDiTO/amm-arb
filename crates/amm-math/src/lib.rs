@@ -12,6 +12,7 @@
 pub mod error;
 pub mod full_math;
 pub mod v2;
+pub mod v3;
 
 pub use alloy_primitives::{I256, U256, aliases::U160};
 pub use error::MathError;
