@@ -1,0 +1,14 @@
+{
+  "name": "amm-arb-vendor",
+  "private": true,
+  "description": "Rebuilds the vendored Uniswap bytecode from the pinned submodules with the official compiler settings.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "solc": "0.7.6",
+    "solc-0.5.16": "npm:solc@0.5.16",
+    "js-sha3": "0.8.0"
+  }
+}
