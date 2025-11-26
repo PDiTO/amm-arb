@@ -108,7 +108,7 @@ impl V2Pair {
     pub fn amount_out(&self, zero_for_one: bool, amount_in: U256) -> Result<U256, MathError> {
         let (reserve_in, reserve_out) = self.reserves(zero_for_one);
         let out = get_amount_out(amount_in, reserve_in, reserve_out)?;
-        self.check_swap(reserve_in, reserve_out, amount_in, out)?;
+        Self::check_swap(reserve_in, reserve_out, amount_in, out)?;
         Ok(out)
     }
 
@@ -119,7 +119,7 @@ impl V2Pair {
             return Err(MathError::InsufficientLiquidity);
         }
         let amount_in = get_amount_in(amount_out, reserve_in, reserve_out)?;
-        self.check_swap(reserve_in, reserve_out, amount_in, amount_out)?;
+        Self::check_swap(reserve_in, reserve_out, amount_in, amount_out)?;
         Ok(amount_in)
     }
 
@@ -139,7 +139,6 @@ impl V2Pair {
     /// The pair's own guards: output strictly below the reserve and the new
     /// input-side balance still fits in `uint112`.
     fn check_swap(
-        &self,
         reserve_in: U256,
         reserve_out: U256,
         amount_in: U256,

@@ -53,94 +53,58 @@ pub fn compute_swap_step(
         amount_remaining.wrapping_neg().into_raw()
     };
 
-    let mut amount_in = U256::ZERO;
-    let mut amount_out = U256::ZERO;
-    let sqrt_ratio_next_x96;
+    let current = sqrt_ratio_current_x96;
+    let target = sqrt_ratio_target_x96;
+    // getAmount{0,1}Delta sort their price arguments, so argument order here
+    // does not matter; only which token is in and which is out.
+    let amount_in_to = |p: U160| {
+        if zero_for_one {
+            get_amount0_delta(p, current, liquidity, true)
+        } else {
+            get_amount1_delta(current, p, liquidity, true)
+        }
+    };
+    let amount_out_to = |p: U160| {
+        if zero_for_one {
+            get_amount1_delta(p, current, liquidity, false)
+        } else {
+            get_amount0_delta(current, p, liquidity, false)
+        }
+    };
 
-    if exact_in {
+    let (sqrt_ratio_next_x96, mut amount_in, mut amount_out) = if exact_in {
         let amount_remaining_less_fee =
             mul_div(amount_remaining_abs, fee_complement, fee_denominator)?;
-        amount_in = if zero_for_one {
-            get_amount0_delta(
-                sqrt_ratio_target_x96,
-                sqrt_ratio_current_x96,
-                liquidity,
-                true,
-            )?
-        } else {
-            get_amount1_delta(
-                sqrt_ratio_current_x96,
-                sqrt_ratio_target_x96,
-                liquidity,
-                true,
-            )?
-        };
-        sqrt_ratio_next_x96 = if amount_remaining_less_fee >= amount_in {
-            sqrt_ratio_target_x96
+        let to_target = amount_in_to(target)?;
+        let next = if amount_remaining_less_fee >= to_target {
+            target
         } else {
             get_next_sqrt_price_from_input(
-                sqrt_ratio_current_x96,
+                current,
                 liquidity,
                 amount_remaining_less_fee,
                 zero_for_one,
             )?
         };
+        (next, to_target, U256::ZERO)
     } else {
-        amount_out = if zero_for_one {
-            get_amount1_delta(
-                sqrt_ratio_target_x96,
-                sqrt_ratio_current_x96,
-                liquidity,
-                false,
-            )?
+        let to_target = amount_out_to(target)?;
+        let next = if amount_remaining_abs >= to_target {
+            target
         } else {
-            get_amount0_delta(
-                sqrt_ratio_current_x96,
-                sqrt_ratio_target_x96,
-                liquidity,
-                false,
-            )?
+            get_next_sqrt_price_from_output(current, liquidity, amount_remaining_abs, zero_for_one)?
         };
-        sqrt_ratio_next_x96 = if amount_remaining_abs >= amount_out {
-            sqrt_ratio_target_x96
-        } else {
-            get_next_sqrt_price_from_output(
-                sqrt_ratio_current_x96,
-                liquidity,
-                amount_remaining_abs,
-                zero_for_one,
-            )?
-        };
+        (next, U256::ZERO, to_target)
+    };
+
+    // Reuse the full-step amount only where the Solidity does
+    // (`max && exactIn ? amountIn : ...` and `max && !exactIn ? amountOut : ...`).
+    let max = target == sqrt_ratio_next_x96;
+    if !max || !exact_in {
+        amount_in = amount_in_to(sqrt_ratio_next_x96)?;
     }
-
-    let max = sqrt_ratio_target_x96 == sqrt_ratio_next_x96;
-
-    if zero_for_one {
-        if !(max && exact_in) {
-            amount_in =
-                get_amount0_delta(sqrt_ratio_next_x96, sqrt_ratio_current_x96, liquidity, true)?;
-        }
-        if !(max && !exact_in) {
-            amount_out = get_amount1_delta(
-                sqrt_ratio_next_x96,
-                sqrt_ratio_current_x96,
-                liquidity,
-                false,
-            )?;
-        }
-    } else {
-        if !(max && exact_in) {
-            amount_in =
-                get_amount1_delta(sqrt_ratio_current_x96, sqrt_ratio_next_x96, liquidity, true)?;
-        }
-        if !(max && !exact_in) {
-            amount_out = get_amount0_delta(
-                sqrt_ratio_current_x96,
-                sqrt_ratio_next_x96,
-                liquidity,
-                false,
-            )?;
-        }
+    if !max || exact_in {
+        amount_out = amount_out_to(sqrt_ratio_next_x96)?;
     }
 
     // Cap the output so an exact-output swap never pays out more than asked.

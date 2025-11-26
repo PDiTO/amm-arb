@@ -306,6 +306,7 @@ impl V3Pool {
     }
 
     /// Applies a swap result, producing the post-swap pool.
+    #[must_use]
     pub fn apply(&self, result: &SwapResult) -> Self {
         let mut next = self.clone();
         next.sqrt_price_x96 = result.sqrt_price_x96;

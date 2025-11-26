@@ -6,6 +6,8 @@
 //! Every expected value here came out of that bytecode. The Rust must agree to
 //! the wei, and must fail exactly where the Solidity reverts.
 
+#![allow(clippy::semicolon_if_nothing_returned)]
+
 use std::fs;
 use std::path::PathBuf;
 
