@@ -143,8 +143,14 @@ mod tests {
     fn bounds_match_the_constants() {
         assert_eq!(get_sqrt_ratio_at_tick(MIN_TICK).unwrap(), MIN_SQRT_RATIO);
         assert_eq!(get_sqrt_ratio_at_tick(MAX_TICK).unwrap(), MAX_SQRT_RATIO);
-        assert_eq!(get_sqrt_ratio_at_tick(MIN_TICK - 1), Err(MathError::TickOutOfBounds));
-        assert_eq!(get_sqrt_ratio_at_tick(MAX_TICK + 1), Err(MathError::TickOutOfBounds));
+        assert_eq!(
+            get_sqrt_ratio_at_tick(MIN_TICK - 1),
+            Err(MathError::TickOutOfBounds)
+        );
+        assert_eq!(
+            get_sqrt_ratio_at_tick(MAX_TICK + 1),
+            Err(MathError::TickOutOfBounds)
+        );
     }
 
     #[test]
@@ -156,7 +162,10 @@ mod tests {
     #[test]
     fn known_values_from_the_uniswap_test_suite() {
         // From v3-core/test/TickMath.spec.ts.
-        assert_eq!(get_sqrt_ratio_at_tick(MIN_TICK + 1).unwrap(), U160::from(4295343490_u64));
+        assert_eq!(
+            get_sqrt_ratio_at_tick(MIN_TICK + 1).unwrap(),
+            U160::from(4295343490_u64)
+        );
         assert_eq!(
             get_sqrt_ratio_at_tick(MAX_TICK - 1).unwrap(),
             uint!(1461373636630004318706518188784493106690254656249_U160)
@@ -174,6 +183,9 @@ mod tests {
             get_tick_at_sqrt_ratio(MIN_SQRT_RATIO - U160::from(1)),
             Err(MathError::SqrtPriceOutOfBounds)
         );
-        assert_eq!(get_tick_at_sqrt_ratio(MAX_SQRT_RATIO), Err(MathError::SqrtPriceOutOfBounds));
+        assert_eq!(
+            get_tick_at_sqrt_ratio(MAX_SQRT_RATIO),
+            Err(MathError::SqrtPriceOutOfBounds)
+        );
     }
 }

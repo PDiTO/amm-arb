@@ -58,7 +58,10 @@ impl TickBitmap {
 
     /// Non-zero words in the bitmap.
     pub fn words(&self) -> impl Iterator<Item = (i16, U256)> + '_ {
-        self.words.iter().map(|(k, v)| (*k, *v)).filter(|(_, v)| !v.is_zero())
+        self.words
+            .iter()
+            .map(|(k, v)| (*k, *v))
+            .filter(|(_, v)| !v.is_zero())
     }
 
     /// Replaces a whole word, as when loading `tickBitmap(int16)` from chain.
@@ -165,7 +168,10 @@ mod tests {
     #[test]
     fn search_right() {
         let b = bitmap(&INITIALIZED);
-        let next = |t| b.next_initialized_tick_within_one_word(t, 1, false).unwrap();
+        let next = |t| {
+            b.next_initialized_tick_within_one_word(t, 1, false)
+                .unwrap()
+        };
         assert_eq!(next(78), (84, true));
         assert_eq!(next(-55), (-4, true));
         assert_eq!(next(77), (78, true));
@@ -199,7 +205,10 @@ mod tests {
     fn unloaded_words_fail_loudly() {
         let mut b = bitmap(&INITIALIZED);
         b.set_loaded_words(Some(0..=0));
-        assert!(b.next_initialized_tick_within_one_word(78, 1, false).is_ok());
+        assert!(
+            b.next_initialized_tick_within_one_word(78, 1, false)
+                .is_ok()
+        );
         assert_eq!(
             b.next_initialized_tick_within_one_word(-3, 1, true),
             Err(MathError::TickWordNotLoaded(-1))

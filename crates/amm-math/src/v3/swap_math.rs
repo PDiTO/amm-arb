@@ -61,9 +61,19 @@ pub fn compute_swap_step(
         let amount_remaining_less_fee =
             mul_div(amount_remaining_abs, fee_complement, fee_denominator)?;
         amount_in = if zero_for_one {
-            get_amount0_delta(sqrt_ratio_target_x96, sqrt_ratio_current_x96, liquidity, true)?
+            get_amount0_delta(
+                sqrt_ratio_target_x96,
+                sqrt_ratio_current_x96,
+                liquidity,
+                true,
+            )?
         } else {
-            get_amount1_delta(sqrt_ratio_current_x96, sqrt_ratio_target_x96, liquidity, true)?
+            get_amount1_delta(
+                sqrt_ratio_current_x96,
+                sqrt_ratio_target_x96,
+                liquidity,
+                true,
+            )?
         };
         sqrt_ratio_next_x96 = if amount_remaining_less_fee >= amount_in {
             sqrt_ratio_target_x96
@@ -77,9 +87,19 @@ pub fn compute_swap_step(
         };
     } else {
         amount_out = if zero_for_one {
-            get_amount1_delta(sqrt_ratio_target_x96, sqrt_ratio_current_x96, liquidity, false)?
+            get_amount1_delta(
+                sqrt_ratio_target_x96,
+                sqrt_ratio_current_x96,
+                liquidity,
+                false,
+            )?
         } else {
-            get_amount0_delta(sqrt_ratio_current_x96, sqrt_ratio_target_x96, liquidity, false)?
+            get_amount0_delta(
+                sqrt_ratio_current_x96,
+                sqrt_ratio_target_x96,
+                liquidity,
+                false,
+            )?
         };
         sqrt_ratio_next_x96 = if amount_remaining_abs >= amount_out {
             sqrt_ratio_target_x96
@@ -101,8 +121,12 @@ pub fn compute_swap_step(
                 get_amount0_delta(sqrt_ratio_next_x96, sqrt_ratio_current_x96, liquidity, true)?;
         }
         if !(max && !exact_in) {
-            amount_out =
-                get_amount1_delta(sqrt_ratio_next_x96, sqrt_ratio_current_x96, liquidity, false)?;
+            amount_out = get_amount1_delta(
+                sqrt_ratio_next_x96,
+                sqrt_ratio_current_x96,
+                liquidity,
+                false,
+            )?;
         }
     } else {
         if !(max && exact_in) {
@@ -110,8 +134,12 @@ pub fn compute_swap_step(
                 get_amount1_delta(sqrt_ratio_current_x96, sqrt_ratio_next_x96, liquidity, true)?;
         }
         if !(max && !exact_in) {
-            amount_out =
-                get_amount0_delta(sqrt_ratio_current_x96, sqrt_ratio_next_x96, liquidity, false)?;
+            amount_out = get_amount0_delta(
+                sqrt_ratio_current_x96,
+                sqrt_ratio_next_x96,
+                liquidity,
+                false,
+            )?;
         }
     }
 
@@ -149,8 +177,8 @@ mod tests {
         // SwapMath.spec.ts: "exact amount in that gets capped at price target in one for zero".
         let price = U160::from(1u128 << 96);
         let target = uint!(79623317895830914510639640423_U160); // encodePriceSqrt(101, 100)
-        let step = compute_swap_step(price, target, 2 * 10u128.pow(18), i(10i128.pow(18)), 600)
-            .unwrap();
+        let step =
+            compute_swap_step(price, target, 2 * 10u128.pow(18), i(10i128.pow(18)), 600).unwrap();
         assert_eq!(step.amount_in, uint!(9975124224178055_U256));
         assert_eq!(step.fee_amount, uint!(5988667735148_U256));
         assert_eq!(step.amount_out, uint!(9925619580021728_U256));
@@ -161,15 +189,12 @@ mod tests {
     fn exact_in_uses_whole_amount_when_target_not_reached() {
         let price = U160::from(1u128 << 96);
         let target = uint!(250541448375047931186413801569_U160); // encodePriceSqrt(1000, 100)
-        let step = compute_swap_step(price, target, 2 * 10u128.pow(18), i(10i128.pow(18)), 600)
-            .unwrap();
+        let step =
+            compute_swap_step(price, target, 2 * 10u128.pow(18), i(10i128.pow(18)), 600).unwrap();
         assert_eq!(step.amount_in, uint!(999400000000000000_U256));
         assert_eq!(step.fee_amount, uint!(600000000000000_U256));
         assert_eq!(step.amount_out, uint!(666399946655997866_U256));
-        assert_eq!(
-            step.amount_in + step.fee_amount,
-            U256::from(10u128.pow(18))
-        );
+        assert_eq!(step.amount_in + step.fee_amount, U256::from(10u128.pow(18)));
     }
 
     #[test]

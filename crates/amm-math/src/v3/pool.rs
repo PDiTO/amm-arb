@@ -59,13 +59,21 @@ pub struct SwapResult {
 impl SwapResult {
     /// Amount paid into the pool (the positive side).
     pub fn amount_in(&self, zero_for_one: bool) -> U256 {
-        let v = if zero_for_one { self.amount0 } else { self.amount1 };
+        let v = if zero_for_one {
+            self.amount0
+        } else {
+            self.amount1
+        };
         v.into_raw()
     }
 
     /// Amount paid out of the pool (the negated negative side).
     pub fn amount_out(&self, zero_for_one: bool) -> U256 {
-        let v = if zero_for_one { self.amount1 } else { self.amount0 };
+        let v = if zero_for_one {
+            self.amount1
+        } else {
+            self.amount0
+        };
         v.wrapping_neg().into_raw()
     }
 }
@@ -109,6 +117,34 @@ impl V3Pool {
             self.bitmap.flip_tick(tick, self.tick_spacing)?;
         }
         self.liquidity_net.insert(tick, liquidity_net);
+        Ok(())
+    }
+
+    /// Adds a liquidity position, doing the same tick and active-liquidity
+    /// bookkeeping as `UniswapV3Pool.mint` (token amounts are not tracked).
+    pub fn add_position(
+        &mut self,
+        tick_lower: i32,
+        tick_upper: i32,
+        liquidity: u128,
+    ) -> Result<(), MathError> {
+        if tick_lower >= tick_upper {
+            return Err(MathError::InvalidTick(tick_lower));
+        }
+        let delta = i128::try_from(liquidity).map_err(|_| MathError::LiquidityOverflow)?;
+        let lower_net = self.liquidity_net.get(&tick_lower).copied().unwrap_or(0);
+        let upper_net = self.liquidity_net.get(&tick_upper).copied().unwrap_or(0);
+        let lower_net = lower_net
+            .checked_add(delta)
+            .ok_or(MathError::LiquidityOverflow)?;
+        let upper_net = upper_net
+            .checked_sub(delta)
+            .ok_or(MathError::LiquidityOverflow)?;
+        self.insert_tick(tick_lower, lower_net)?;
+        self.insert_tick(tick_upper, upper_net)?;
+        if (tick_lower..tick_upper).contains(&self.tick) {
+            self.liquidity = add_delta(self.liquidity, delta)?;
+        }
         Ok(())
     }
 
@@ -167,9 +203,11 @@ impl V3Pool {
 
         while !remaining.is_zero() && sqrt_price != limit {
             let sqrt_price_start = sqrt_price;
-            let (next, initialized) =
-                self.bitmap
-                    .next_initialized_tick_within_one_word(tick, self.tick_spacing, zero_for_one)?;
+            let (next, initialized) = self.bitmap.next_initialized_tick_within_one_word(
+                tick,
+                self.tick_spacing,
+                zero_for_one,
+            )?;
             // The bitmap does not know about MIN_TICK / MAX_TICK.
             let tick_next = next.clamp(MIN_TICK, MAX_TICK);
             let sqrt_price_next = get_sqrt_ratio_at_tick(tick_next)?;
@@ -204,11 +242,19 @@ impl V3Pool {
                         .get(&tick_next)
                         .ok_or(MathError::MissingTick(tick_next))?;
                     // Moving left, liquidityNet applies with the opposite sign.
-                    let net = if zero_for_one { net.wrapping_neg() } else { net };
+                    let net = if zero_for_one {
+                        net.wrapping_neg()
+                    } else {
+                        net
+                    };
                     liquidity = add_delta(liquidity, net)?;
                     ticks_crossed += 1;
                 }
-                tick = if zero_for_one { tick_next - 1 } else { tick_next };
+                tick = if zero_for_one {
+                    tick_next - 1
+                } else {
+                    tick_next
+                };
             } else if sqrt_price != sqrt_price_start {
                 // Recompute unless we are on a lower tick boundary and have not moved.
                 tick = get_tick_at_sqrt_ratio(sqrt_price)?;
@@ -232,7 +278,11 @@ impl V3Pool {
     }
 
     /// Output for exactly `amount_in`, failing if the pool cannot absorb all of it.
-    pub fn quote_exact_input(&self, zero_for_one: bool, amount_in: U256) -> Result<U256, MathError> {
+    pub fn quote_exact_input(
+        &self,
+        zero_for_one: bool,
+        amount_in: U256,
+    ) -> Result<U256, MathError> {
         let specified = to_int256(amount_in)?;
         let r = self.swap(zero_for_one, specified, None)?;
         if r.amount_in(zero_for_one) != amount_in {
@@ -279,10 +329,27 @@ mod tests {
 
     /// Price 1, one position of 1e18 liquidity over [-600, 600].
     fn simple_pool() -> V3Pool {
-        let mut p = V3Pool::new(U160::from(1u128 << 96), 0, 10u128.pow(18), 3000, SPACING).unwrap();
-        p.insert_tick(-600, 10i128.pow(18)).unwrap();
-        p.insert_tick(600, -(10i128.pow(18))).unwrap();
+        let mut p = V3Pool::new(U160::from(1u128 << 96), 0, 0, 3000, SPACING).unwrap();
+        p.add_position(-600, 600, 10u128.pow(18)).unwrap();
         p
+    }
+
+    #[test]
+    fn add_position_tracks_active_liquidity_and_net() {
+        let mut p = simple_pool();
+        assert_eq!(p.liquidity, 10u128.pow(18));
+        p.add_position(600, 1200, 5).unwrap();
+        p.add_position(-1200, -600, 7).unwrap();
+        assert_eq!(p.liquidity, 10u128.pow(18));
+        assert_eq!(
+            p.ticks(),
+            vec![
+                (-1200, 7),
+                (-600, 10i128.pow(18) - 7),
+                (600, 5 - 10i128.pow(18)),
+                (1200, -5)
+            ]
+        );
     }
 
     fn i(x: i128) -> I256 {
@@ -318,7 +385,10 @@ mod tests {
     #[test]
     fn rejects_bad_limits_and_zero_amounts() {
         let pool = simple_pool();
-        assert_eq!(pool.swap(true, I256::ZERO, None), Err(MathError::ZeroAmountSpecified));
+        assert_eq!(
+            pool.swap(true, I256::ZERO, None),
+            Err(MathError::ZeroAmountSpecified)
+        );
         assert_eq!(
             pool.swap(true, i(1), Some(pool.sqrt_price_x96)),
             Err(MathError::InvalidPriceLimit)
@@ -332,7 +402,9 @@ mod tests {
     #[test]
     fn exact_output_round_trip() {
         let pool = simple_pool();
-        let out = pool.quote_exact_input(false, U256::from(10u128.pow(16))).unwrap();
+        let out = pool
+            .quote_exact_input(false, U256::from(10u128.pow(16)))
+            .unwrap();
         let back = pool.quote_exact_output(false, out).unwrap();
         assert!(back <= U256::from(10u128.pow(16)));
     }

@@ -172,8 +172,12 @@ mod tests {
     #[test]
     fn amount_out_matches_hand_computation() {
         // 1 ETH into a 100 ETH / 200k USDC pool.
-        let out = get_amount_out(u(10u128.pow(18)), u(100 * 10u128.pow(18)), u(200_000 * 10u128.pow(6)))
-            .unwrap();
+        let out = get_amount_out(
+            u(10u128.pow(18)),
+            u(100 * 10u128.pow(18)),
+            u(200_000 * 10u128.pow(6)),
+        )
+        .unwrap();
         // 1e18*997*2e11 / (1e20*1000 + 997e18) = 1974316068.1... -> 1974316068
         assert_eq!(out, u(1_974_316_068));
     }
@@ -190,23 +194,41 @@ mod tests {
 
     #[test]
     fn zero_and_empty_inputs_fail_like_the_library() {
-        assert_eq!(get_amount_out(U256::ZERO, u(1), u(1)), Err(MathError::InsufficientInputAmount));
-        assert_eq!(get_amount_out(u(1), U256::ZERO, u(1)), Err(MathError::InsufficientLiquidity));
-        assert_eq!(get_amount_in(U256::ZERO, u(1), u(1)), Err(MathError::InsufficientOutputAmount));
-        assert_eq!(get_amount_in(u(5), u(10), u(5)), Err(MathError::DivisionByZero));
+        assert_eq!(
+            get_amount_out(U256::ZERO, u(1), u(1)),
+            Err(MathError::InsufficientInputAmount)
+        );
+        assert_eq!(
+            get_amount_out(u(1), U256::ZERO, u(1)),
+            Err(MathError::InsufficientLiquidity)
+        );
+        assert_eq!(
+            get_amount_in(U256::ZERO, u(1), u(1)),
+            Err(MathError::InsufficientOutputAmount)
+        );
+        assert_eq!(
+            get_amount_in(u(5), u(10), u(5)),
+            Err(MathError::DivisionByZero)
+        );
         assert_eq!(get_amount_in(u(6), u(10), u(5)), Err(MathError::Overflow));
     }
 
     #[test]
     fn pair_rejects_reserve_overflow() {
         let pair = V2Pair::new(MAX_RESERVE - 10, MAX_RESERVE).unwrap();
-        assert_eq!(pair.amount_out(true, u(11)), Err(MathError::ReserveOverflow));
+        assert_eq!(
+            pair.amount_out(true, u(11)),
+            Err(MathError::ReserveOverflow)
+        );
         assert!(V2Pair::new(MAX_RESERVE + 1, 1).is_err());
     }
 
     #[test]
     fn pair_rejects_dust_that_rounds_to_zero() {
         let pair = V2Pair::new(10u128.pow(24), 1000).unwrap();
-        assert_eq!(pair.amount_out(true, u(1)), Err(MathError::InsufficientOutputAmount));
+        assert_eq!(
+            pair.amount_out(true, u(1)),
+            Err(MathError::InsufficientOutputAmount)
+        );
     }
 }

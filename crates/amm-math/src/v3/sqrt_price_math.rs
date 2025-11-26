@@ -55,7 +55,10 @@ pub fn get_next_sqrt_price_from_amount0_rounding_up(
             .checked_div(sqrt_p)
             .ok_or(MathError::DivisionByZero)?;
         let denominator = quotient.checked_add(amount).ok_or(MathError::Overflow)?;
-        Ok(U160::wrapping_from(div_rounding_up(numerator1, denominator)))
+        Ok(U160::wrapping_from(div_rounding_up(
+            numerator1,
+            denominator,
+        )))
     } else {
         let (product, wrapped) = amount.overflowing_mul(sqrt_p);
         if wrapped || numerator1 <= product {
@@ -227,8 +230,14 @@ mod tests {
     #[test]
     fn zero_amount_returns_input_price() {
         let p = price_one();
-        assert_eq!(get_next_sqrt_price_from_input(p, 1, U256::ZERO, true).unwrap(), p);
-        assert_eq!(get_next_sqrt_price_from_input(p, 1, U256::ZERO, false).unwrap(), p);
+        assert_eq!(
+            get_next_sqrt_price_from_input(p, 1, U256::ZERO, true).unwrap(),
+            p
+        );
+        assert_eq!(
+            get_next_sqrt_price_from_input(p, 1, U256::ZERO, false).unwrap(),
+            p
+        );
     }
 
     #[test]
@@ -282,7 +291,10 @@ mod tests {
         let down1 = get_amount1_delta(a, b, l, false).unwrap();
         assert_eq!(up1, uint!(100000000000000000_U256));
         assert_eq!(up1 - down1, U256::from(1u8));
-        assert_eq!(get_amount0_delta(U160::ZERO, b, l, true), Err(MathError::ZeroPriceOrLiquidity));
+        assert_eq!(
+            get_amount0_delta(U160::ZERO, b, l, true),
+            Err(MathError::ZeroPriceOrLiquidity)
+        );
     }
 
     #[test]

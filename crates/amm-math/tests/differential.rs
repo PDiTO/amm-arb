@@ -26,9 +26,15 @@ use amm_math::{
 use serde_json::Value;
 
 fn lines(file: &str) -> Vec<Value> {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../testdata").join(file);
-    let text = fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("{}: {e}. Run `forge script script/GenerateVectors.s.sol` in contracts/", path.display()));
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../testdata")
+        .join(file);
+    let text = fs::read_to_string(&path).unwrap_or_else(|e| {
+        panic!(
+            "{}: {e}. Run `forge script script/GenerateVectors.s.sol` in contracts/",
+            path.display()
+        )
+    });
     text.lines()
         .filter(|l| !l.trim().is_empty())
         .map(|l| serde_json::from_str(l).expect("valid json line"))
@@ -36,7 +42,8 @@ fn lines(file: &str) -> Vec<Value> {
 }
 
 fn s(v: &Value) -> &str {
-    v.as_str().unwrap_or_else(|| panic!("expected string, got {v}"))
+    v.as_str()
+        .unwrap_or_else(|| panic!("expected string, got {v}"))
 }
 fn u256(v: &Value) -> U256 {
     s(v).parse().expect("u256")
@@ -92,16 +99,30 @@ fn v3_math_libraries_match_bytecode() {
         *by_fn.entry(f.to_owned()).or_default() += 1;
         let a = line["args"].as_array().unwrap();
         match f {
-            "getSqrtRatioAtTick" => check(line, get_sqrt_ratio_at_tick(i32_(&a[0])), |o| u160(&o[0])),
-            "getTickAtSqrtRatio" => check(line, get_tick_at_sqrt_ratio(u160(&a[0])), |o| i32_(&o[0])),
+            "getSqrtRatioAtTick" => {
+                check(line, get_sqrt_ratio_at_tick(i32_(&a[0])), |o| u160(&o[0]))
+            }
+            "getTickAtSqrtRatio" => {
+                check(line, get_tick_at_sqrt_ratio(u160(&a[0])), |o| i32_(&o[0]))
+            }
             "getNextSqrtPriceFromInput" => check(
                 line,
-                get_next_sqrt_price_from_input(u160(&a[0]), u128_(&a[1]), u256(&a[2]), boolean(&a[3])),
+                get_next_sqrt_price_from_input(
+                    u160(&a[0]),
+                    u128_(&a[1]),
+                    u256(&a[2]),
+                    boolean(&a[3]),
+                ),
                 |o| u160(&o[0]),
             ),
             "getNextSqrtPriceFromOutput" => check(
                 line,
-                get_next_sqrt_price_from_output(u160(&a[0]), u128_(&a[1]), u256(&a[2]), boolean(&a[3])),
+                get_next_sqrt_price_from_output(
+                    u160(&a[0]),
+                    u128_(&a[1]),
+                    u256(&a[2]),
+                    boolean(&a[3]),
+                ),
                 |o| u160(&o[0]),
             ),
             "getAmount0Delta" => check(
@@ -123,10 +144,19 @@ fn v3_math_libraries_match_bytecode() {
                     i256(&a[3]),
                     s(&a[4]).parse().unwrap(),
                 )
-                .map(|st| (st.sqrt_ratio_next_x96, st.amount_in, st.amount_out, st.fee_amount)),
+                .map(|st| {
+                    (
+                        st.sqrt_ratio_next_x96,
+                        st.amount_in,
+                        st.amount_out,
+                        st.fee_amount,
+                    )
+                }),
                 |o| (u160(&o[0]), u256(&o[1]), u256(&o[2]), u256(&o[3])),
             ),
-            "mulDiv" => check(line, mul_div(u256(&a[0]), u256(&a[1]), u256(&a[2])), |o| u256(&o[0])),
+            "mulDiv" => check(line, mul_div(u256(&a[0]), u256(&a[1]), u256(&a[2])), |o| {
+                u256(&o[0])
+            }),
             "mulDivRoundingUp" => check(
                 line,
                 mul_div_rounding_up(u256(&a[0]), u256(&a[1]), u256(&a[2])),
@@ -149,20 +179,40 @@ fn v2_quotes_match_the_pair_k_check() {
         let amount_in = u256(&line["amountIn"]);
         let amount_out = u256(&line["amountOut"]);
         let accepted = line["accepted"].as_bool().unwrap();
-        let (r0, r1) = if zero_for_one { (r_in, r_out) } else { (r_out, r_in) };
+        let (r0, r1) = if zero_for_one {
+            (r_in, r_out)
+        } else {
+            (r_out, r_in)
+        };
         let pair = V2Pair::new(r0.to(), r1.to()).unwrap();
 
         match line["kind"].as_str().unwrap() {
             "out" => {
-                assert_eq!(get_amount_out(amount_in, r_in, r_out).unwrap(), amount_out, "{line}");
+                assert_eq!(
+                    get_amount_out(amount_in, r_in, r_out).unwrap(),
+                    amount_out,
+                    "{line}"
+                );
                 // The real pair accepts exactly what the quote allows...
-                assert_eq!(pair.amount_out(zero_for_one, amount_in).is_ok(), accepted, "{line}");
+                assert_eq!(
+                    pair.amount_out(zero_for_one, amount_in).is_ok(),
+                    accepted,
+                    "{line}"
+                );
                 // ...and never one wei more: getAmountOut is the maximum.
                 assert!(!line["acceptedPlusOne"].as_bool().unwrap(), "{line}");
             }
             "in" => {
-                assert_eq!(get_amount_in(amount_out, r_in, r_out).unwrap(), amount_in, "{line}");
-                assert_eq!(pair.amount_in(zero_for_one, amount_out).is_ok(), accepted, "{line}");
+                assert_eq!(
+                    get_amount_in(amount_out, r_in, r_out).unwrap(),
+                    amount_in,
+                    "{line}"
+                );
+                assert_eq!(
+                    pair.amount_in(zero_for_one, amount_out).is_ok(),
+                    accepted,
+                    "{line}"
+                );
             }
             other => panic!("unknown kind {other}"),
         }
@@ -184,12 +234,17 @@ fn load_pools() -> Vec<V3Pool> {
             )
             .unwrap();
             for t in p["ticks"].as_array().unwrap() {
-                pool.insert_tick(i32_(&t[0]), s(&t[1]).parse().unwrap()).unwrap();
+                pool.insert_tick(i32_(&t[0]), s(&t[1]).parse().unwrap())
+                    .unwrap();
             }
             // The bitmap derived from the ticks must equal the one on chain.
             for w in p["words"].as_array().unwrap() {
                 let word: i16 = s(&w[0]).parse().unwrap();
-                assert_eq!(pool.bitmap().word(word).unwrap(), u256(&w[1]), "pool {i} word {word}");
+                assert_eq!(
+                    pool.bitmap().word(word).unwrap(),
+                    u256(&w[1]),
+                    "pool {i} word {word}"
+                );
             }
             pool
         })
@@ -211,10 +266,16 @@ fn v3_swaps_match_the_real_pool() {
         let got = pools[id].swap(zero_for_one, amount, Some(limit));
 
         if line["ok"].as_bool().unwrap() {
-            let r = got.unwrap_or_else(|e| panic!("pool swap succeeded on chain, Rust failed: {e:?} {line}"));
+            let r = got.unwrap_or_else(|e| {
+                panic!("pool swap succeeded on chain, Rust failed: {e:?} {line}")
+            });
             assert_eq!(r.amount0, i256(&line["amount0"]), "amount0 {line}");
             assert_eq!(r.amount1, i256(&line["amount1"]), "amount1 {line}");
-            assert_eq!(r.sqrt_price_x96, u160(&line["sqrtPriceX96"]), "price {line}");
+            assert_eq!(
+                r.sqrt_price_x96,
+                u160(&line["sqrtPriceX96"]),
+                "price {line}"
+            );
             assert_eq!(r.tick, line["tick"].as_i64().unwrap() as i32, "tick {line}");
             assert_eq!(r.liquidity, u128_(&line["liquidity"]), "liquidity {line}");
             crossed += r.ticks_crossed;
@@ -223,11 +284,17 @@ fn v3_swaps_match_the_real_pool() {
                 pools[id] = pools[id].apply(&r);
             }
         } else {
-            assert!(got.is_err(), "pool swap reverted on chain, Rust returned {got:?} for {line}");
+            assert!(
+                got.is_err(),
+                "pool swap reverted on chain, Rust returned {got:?} for {line}"
+            );
             failed += 1;
         }
     }
     assert_eq!(ok + failed, 1400);
-    assert!(crossed > 1000, "vectors should exercise tick crossings, got {crossed}");
+    assert!(
+        crossed > 1000,
+        "vectors should exercise tick crossings, got {crossed}"
+    );
     println!("v3 swaps: {ok} matched, {failed} reverts matched, {crossed} tick crossings");
 }
