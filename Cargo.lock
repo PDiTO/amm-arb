@@ -49,6 +49,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "amm-arb"
+version = "0.1.0"
+dependencies = [
+ "alloy-primitives",
+ "amm-math",
+ "criterion",
+ "proptest",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "amm-math"
 version = "0.1.0"
 dependencies = [

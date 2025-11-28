@@ -1,0 +1,23 @@
+[package]
+name = "amm-arb"
+description = "Cyclic arbitrage search over Uniswap V2/V3 pools using exact integer quotes."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+alloy-primitives.workspace = true
+amm-math.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+proptest.workspace = true
+
+
+[lints]
+workspace = true
