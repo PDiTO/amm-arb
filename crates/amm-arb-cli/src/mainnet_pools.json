@@ -1,0 +1,19 @@
+[
+  { "kind": "v2", "address": "0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc", "note": "USDC/WETH" },
+  { "kind": "v2", "address": "0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852", "note": "WETH/USDT" },
+  { "kind": "v2", "address": "0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11", "note": "DAI/WETH" },
+  { "kind": "v2", "address": "0xBb2b8038a1640196FbE3e38816F3e67Cba72D940", "note": "WBTC/WETH" },
+  { "kind": "v2", "address": "0xAE461cA67B15dc8dc81CE7615e0320dA1A9aB8D5", "note": "DAI/USDC" },
+  { "kind": "v2", "address": "0x3041CbD36888bECc7bbCBc0045E3B1f144466f5f", "note": "USDC/USDT" },
+  { "kind": "v3", "address": "0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640", "note": "USDC/WETH 0.05%" },
+  { "kind": "v3", "address": "0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8", "note": "USDC/WETH 0.3%" },
+  { "kind": "v3", "address": "0x11b815efB8f581194ae79006d24E0d814B7697F6", "note": "WETH/USDT 0.05%" },
+  { "kind": "v3", "address": "0x4e68Ccd3E89f51C3074ca5072bbAC773960dFa36", "note": "WETH/USDT 0.3%" },
+  { "kind": "v3", "address": "0x60594a405d53811d3BC4766596EFD80fd545A270", "note": "DAI/WETH 0.05%" },
+  { "kind": "v3", "address": "0xC2e9F25Be6257c210d7Adf0D4Cd6E3E881ba25f8", "note": "DAI/WETH 0.3%" },
+  { "kind": "v3", "address": "0x5777d92f208679DB4b9778590Fa3CAB3aC9e2168", "note": "DAI/USDC 0.01%" },
+  { "kind": "v3", "address": "0x3416cF6C708Da44DB2624D63ea0AAef7113527C6", "note": "USDC/USDT 0.01%" },
+  { "kind": "v3", "address": "0x4585FE77225b41b697C938B018E2Ac67Ac5a20c0", "note": "WBTC/WETH 0.05%" },
+  { "kind": "v3", "address": "0xCBCdF9626bC03E24f779434178A73a0B4bad62eD", "note": "WBTC/WETH 0.3%" },
+  { "kind": "v3", "address": "0x99ac8cA7087fA4A2A1FB6357269965A2014ABc35", "note": "WBTC/USDC 0.3%" }
+]

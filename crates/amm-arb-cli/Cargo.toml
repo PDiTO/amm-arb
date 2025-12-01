@@ -1,0 +1,29 @@
+[package]
+name = "amm-arb-cli"
+description = "Command-line scanner and quoter for Uniswap V2/V3 cyclic arbitrage."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "amm_arb_cli"
+path = "src/lib.rs"
+
+[[bin]]
+name = "amm-arb"
+path = "src/main.rs"
+
+[dependencies]
+alloy.workspace = true
+amm-arb.workspace = true
+amm-math.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+
+[lints]
+workspace = true

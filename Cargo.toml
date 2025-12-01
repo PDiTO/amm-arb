@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/amm-math", "crates/amm-arb"]
+members = ["crates/amm-math", "crates/amm-arb", "crates/amm-arb-cli"]
 
 [workspace.package]
 version = "0.1.0"
