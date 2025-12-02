@@ -17,6 +17,32 @@ fs_permissions = [
     { access = "read-write", path = "../testdata" },
 ]
 
+[lint]
+# Lint what gets deployed. Tests and scripts are exercised, not deployed.
+ignore = ["./test/**/*.sol", "./script/**/*.sol"]
+exclude_lints = [
+    # Public immutables are part of the ABI (owner(), v2Factory(), ...).
+    "screaming-snake-case-immutable",
+    # Small related interfaces are grouped per protocol on purpose.
+    "multi-contract-file",
+    # Clarity over a few gas: CREATE2 salts are hashed once per hop.
+    "asm-keccak256",
+    # A multi-hop executor calls pools in a loop by design; hop count is capped.
+    "calls-loop",
+    # SafeTransferLib and the ETH sweep need raw calls.
+    "low-level-calls",
+    # Path validation and per-hop checks revert inside loops on purpose.
+    "require-revert-in-loop",
+    # `for (uint256 i; ...)` is the idiom, not a bug.
+    "uninitialized-local",
+    # ArbExecuted can only be emitted once the swaps have run; execute is owner-only.
+    "reentrancy-events",
+    # One short modifier.
+    "unwrapped-modifier-logic",
+    # Interfaces and libraries keep a ^0.8.20 range so they can be reused.
+    "pragma-inconsistent",
+]
+
 [fuzz]
 runs = 1000
 
