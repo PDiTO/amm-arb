@@ -259,8 +259,7 @@ contract MathVectors is VectorBase {
     }
 
     function _swapStep(uint160 current, uint160 target, uint128 l, int256 remaining, uint24 fee) internal {
-        string memory args =
-            string.concat(_u(current), ",", _u(target), ",", _u(l), ",", _i(remaining), ",", _u(fee));
+        string memory args = string.concat(_u(current), ",", _u(target), ",", _u(l), ",", _i(remaining), ",", _u(fee));
         try harness.computeSwapStep(current, target, l, remaining, fee) returns (
             uint160 next, uint256 amountIn, uint256 amountOut, uint256 feeAmount
         ) {
@@ -296,7 +295,6 @@ contract MathVectors is VectorBase {
             }
         }
     }
-
 }
 
 /// @notice V2 quotes checked by the real pair, and V3 swaps run on real pools.
@@ -504,7 +502,8 @@ contract AmmVectors is VectorBase {
             (,,,,,,, bool initialized) = pool.ticks(ticks[i]);
             if (!initialized) continue;
             (, int128 net,,,,,,) = pool.ticks(ticks[i]);
-            tickJson = string.concat(tickJson, bytes(tickJson).length == 0 ? "" : ",", "[", _i(ticks[i]), ",", _i(net), "]");
+            tickJson =
+                string.concat(tickJson, bytes(tickJson).length == 0 ? "" : ",", "[", _i(ticks[i]), ",", _i(net), "]");
             int16 word = int16(ticks[i] / spec.spacing >> 8);
             if (!_wordSeen(ticks, i, spec.spacing)) {
                 wordJson = string.concat(
@@ -617,5 +616,4 @@ contract AmmVectors is VectorBase {
         if (zeroForOne ? limit >= price : limit <= price) return zeroForOne ? MIN_SQRT_RATIO + 1 : MAX_SQRT_RATIO - 1;
         return limit;
     }
-
 }

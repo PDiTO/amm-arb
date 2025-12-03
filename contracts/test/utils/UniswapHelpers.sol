@@ -56,8 +56,10 @@ contract V3Quoter is IUniswapV3SwapCallback {
         external
         returns (bool ok, int256 amount0, int256 amount1)
     {
-        try IUniswapV3Pool(pool).swap(address(this), zeroForOne, amountSpecified, sqrtPriceLimitX96, abi.encode(false))
-        returns (int256 a0, int256 a1) {
+        try IUniswapV3Pool(pool)
+            .swap(address(this), zeroForOne, amountSpecified, sqrtPriceLimitX96, abi.encode(false)) returns (
+            int256 a0, int256 a1
+        ) {
             return (true, a0, a1);
         } catch {
             return (false, 0, 0);
@@ -91,9 +93,7 @@ contract V2Probe {
         }
     }
 
-    function attempt(address pair, address tokenIn, uint256 amountIn, uint256 amount0Out, uint256 amount1Out)
-        external
-    {
+    function attempt(address pair, address tokenIn, uint256 amountIn, uint256 amount0Out, uint256 amount1Out) external {
         require(msg.sender == address(this), "internal");
         MockERC20(tokenIn).mint(pair, amountIn);
         IUniswapV2Pair(pair).swap(amount0Out, amount1Out, address(this), "");
