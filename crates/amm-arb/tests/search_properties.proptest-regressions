@@ -7,3 +7,4 @@
 cc 2f8ec4c8e4283d61e11c3317b1258c58cf5dfc6112ec8ad5747be985f1015c03 # shrinks to values = [0, -200, -1600], seed = 0
 cc a898b761ccfa3612fde3fa0e89c7ae1e618024af288199c75462a05c2e4af85e # shrinks to values = [0, 0, 46400], which = 0, bump = 0.01, cheaper = false
 cc ad066427e176d39a5e64e6669de24713cf5e6531364d2707d01ef7c0ee8fa540 # shrinks to base = 28749, skew_bp = 637, depth2 = 2
+cc cba05533240a976aa945b85a0b03b128d423fd1f89b254f71689d57a8689b6eb # shrinks to base = 20000, skew_bp = 150, depth2 = 1

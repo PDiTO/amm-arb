@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust:
+    name: Rust (fmt, clippy, test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all --check
+      - run: cargo clippy --all-targets -- -D warnings
+      # The mainnet quoter cross-check skips itself without MAINNET_RPC_URL.
+      - run: cargo test
+
+  foundry:
+    name: Foundry (fmt, build, test, vectors)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.4.3
+      - run: forge fmt --check
+      - run: forge build
+      # Fork tests skip themselves without MAINNET_RPC_URL.
+      - run: forge test
+      - name: Differential vectors match the vendored bytecode
+        run: |
+          forge script script/GenerateVectors.s.sol
+          git diff --exit-code -- ../testdata
+
+  vendor:
+    name: Vendored bytecode rebuilds from submodules
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts/vendor
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      # Fails unless the pair and pool init code hashes equal mainnet's.
+      - run: npm run build
+      - run: git diff --exit-code -- artifacts

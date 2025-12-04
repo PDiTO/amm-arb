@@ -9,7 +9,11 @@ fn run(args: &[&str]) -> String {
         .current_dir(root)
         .output()
         .expect("binary runs");
-    assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
     String::from_utf8(out.stdout).unwrap()
 }
 

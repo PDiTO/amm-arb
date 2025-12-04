@@ -173,10 +173,13 @@ proptest! {
         let legs = [(0usize, token0), (1usize, market.pools[0].token1)];
         let output = |x: U256| cycle_output(&market, &legs, x);
 
+        // Best profit over every size, or zero if nothing is profitable (the
+        // optimiser reports "no opportunity" rather than a loss).
         let brute = (1..=base as u64)
             .filter_map(|x| output(U256::from(x)).map(|o| o.to::<u128>() as i128 - x as i128))
             .max()
-            .unwrap();
+            .unwrap()
+            .max(0);
         let found = optimize(output, 64).map_or(0, |s| s.profit().to::<u128>() as i128);
         // Each hop floors its output, so integer profit is concave only up to
         // about one unit per hop. The search is exact up to that noise.
