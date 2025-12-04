@@ -13,12 +13,20 @@ use crate::{
 
 /// Gas used by `ArbExecutor.execute`, split into a fixed part and a per-hop part.
 ///
-/// The defaults come from `forge test --gas-report` on the executor tests
-/// (see the README). Tick crossings add a few thousand gas each on V3 and are
-/// not modelled separately.
+/// Calibrated from `forge test --isolate --gas-report` on the executor tests
+/// (each call its own transaction, cold storage, 21k intrinsic included):
+///
+/// | cycle              | gas     |
+/// |--------------------|---------|
+/// | V2 -> V3           | 196,718 |
+/// | V2 -> V2 -> V3     | 243,845 |
+/// | V2 -> V3 -> V3     | 278,980 |
+///
+/// which gives ~47k per V2 hop, ~82k per V3 hop and ~67k fixed. Swaps that
+/// cross initialized V3 ticks cost more and are not modelled separately.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GasModel {
-    /// Transaction base cost plus executor overhead.
+    /// Intrinsic gas, calldata and executor overhead.
     pub base: u64,
     /// Marginal gas for a V2 hop.
     pub per_v2_hop: u64,
@@ -29,9 +37,9 @@ pub struct GasModel {
 impl Default for GasModel {
     fn default() -> Self {
         Self {
-            base: 21_000 + 25_000,
-            per_v2_hop: 45_000,
-            per_v3_hop: 80_000,
+            base: 67_000,
+            per_v2_hop: 47_000,
+            per_v3_hop: 82_000,
         }
     }
 }
