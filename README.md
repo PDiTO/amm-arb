@@ -1,4 +1,6 @@
-<!-- logo -->
+<p align="center">
+  <img src="docs/logo.png" alt="amm-arb logo" width="200">
+</p>
 
 # amm-arb
 
